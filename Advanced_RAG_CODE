@@ -1,0 +1,41 @@
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
+
+# Load your documents (replace with your actual data)
+documents = [
+    "Document 1 content...",
+    "Document 2 content...",
+    # ...
+]
+
+# Split documents into smaller chunks
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+texts = text_splitter.split_text("\n".join(documents))
+
+# Create embeddings and store them in a vector database
+embeddings = OpenAIEmbeddings()
+vectorstore = FAISS.from_texts(texts, embeddings)
+
+# Define a simple reranker (replace with a more sophisticated model)
+def reranker(query, docs):
+    query_embedding = embeddings.embed_query(query)
+    doc_embeddings = [embeddings.embed_query(doc.text) for doc in docs]
+    scores = [cosine_similarity(query_embedding, doc_embedding) for doc_embedding in doc_embeddings]
+    return sorted(zip(docs, scores), key=lambda x: x[1], reverse=True)
+
+# Create the RetrievalQA chain
+qa_chain = RetrievalQA.from_chain_type(
+    llm=OpenAI(model_name="text-davinci-003"),
+    retriever=vectorstore.as_retriever(search_type="similarity", n_results=5),
+    reranker=reranker,
+)
+
+# Get user query
+query = "What is the capital of France?"
+
+# Generate answer
+result = qa_chain.run(query)
+print(result)

@@ -4,13 +4,6 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
 
-# Load your documents (replace with your actual data)
-documents = [
-    "Document 1 content...",
-    "Document 2 content...",
-    # ...
-]
-
 # Split documents into smaller chunks
 text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 texts = text_splitter.split_text("\n".join(documents))
